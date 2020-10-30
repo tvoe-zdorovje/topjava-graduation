@@ -15,7 +15,7 @@ public class ProfileRestController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public User register(User user) {
+    public User register(@RequestBody User user) {
         return null;
     }
 
@@ -25,7 +25,7 @@ public class ProfileRestController {
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void update(User user) {
+    public void update(@RequestBody User user) {
         userRestController.update(user, 0); // FIXME: 27.10.2020
     }
 

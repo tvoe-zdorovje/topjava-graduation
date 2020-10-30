@@ -1,12 +1,20 @@
 package ru.javawebinar.topjava.model;
 
-import java.util.Date;
-import java.util.List;
+import javax.persistence.*;
 
+@Entity
+@Table(name = "restaurants")
 public class Restaurant {
-    private final String name;
+    @Id
+    @Column(name = "name", unique = true, nullable = false)
+    private String name;
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "menu", foreignKey = @ForeignKey(name = "menu_fk"))
     private Menu menu;
+
+    public Restaurant() {
+    }
 
     public Restaurant(String name) {
         this(name, null);
@@ -17,44 +25,15 @@ public class Restaurant {
         this.menu = menu;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getName() {
         return name;
     }
 
     public Menu getMenu() {
         return menu;
-    }
-
-    public void setMenu(Menu menu) {
-        this.menu = menu;
-    }
-
-
-    public static class Menu {
-        private final Integer id;
-        private final List<Dish> dishes;
-        private final Date date;
-
-        public Menu(List<Dish> dishes) {
-            this(null, dishes);
-        }
-
-        public Menu(Integer id, List<Dish> dishes) {
-            this.id = id;
-            this.dishes = dishes;
-            this.date = new Date();
-        }
-
-        public Integer getId() {
-            return id;
-        }
-
-        public List<Dish> getDishes() {
-            return dishes;
-        }
-
-        public Date getDate() {
-            return new Date(date.getTime());
-        }
     }
 }

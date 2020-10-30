@@ -21,7 +21,7 @@ public class UserRestController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void update(User user, @PathVariable int id) {
+    public void update(@RequestBody User user, @PathVariable int id) {
     }
 
     @DeleteMapping("/{id}")
