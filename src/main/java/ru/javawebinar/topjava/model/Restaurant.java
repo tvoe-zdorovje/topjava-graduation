@@ -75,7 +75,6 @@ public class Restaurant implements HasId<String> {
         setName(name);
     }
 
-
     @Override
     public String toString() {
         return "Restaurant{" +
