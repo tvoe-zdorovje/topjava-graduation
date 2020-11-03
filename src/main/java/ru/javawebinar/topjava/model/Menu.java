@@ -1,11 +1,19 @@
 package ru.javawebinar.topjava.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 @Entity
 @Table(name = "menu", uniqueConstraints = @UniqueConstraint(name = "date_uniq_idx", columnNames = {"restaurant", "date"}))
 public class Menu {
@@ -17,10 +25,12 @@ public class Menu {
     @OneToOne
     @JoinColumn(name = "restaurant", nullable = false, foreignKey = @ForeignKey(name = "restaurant_fkey",
             foreignKeyDefinition = "FOREIGN KEY (restaurant) REFERENCES restaurants(name) ON DELETE CASCADE ON UPDATE CASCADE"))
+    @JsonBackReference
     private Restaurant restaurant;
 
     @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("name")
+    @JsonProperty("menu")
     private List<Dish> dishes;
 
     @Column(name = "date", nullable = false)

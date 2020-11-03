@@ -1,12 +1,17 @@
 package ru.javawebinar.topjava.web;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import ru.javawebinar.topjava.model.User;
 
+@Transactional(readOnly = true)
 @RestController
 @RequestMapping(value = "/profile", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ProfileRestController {
+
+    public static final int USER_ID = 2;
 
     private final UserRestController userRestController;
 
@@ -14,23 +19,22 @@ public class ProfileRestController {
         this.userRestController = userRestController;
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public User register(@RequestBody User user) {
-        return null;
-    }
-
     @GetMapping
     public User get() {
-        return userRestController.get(0); // FIXME: 27.10.2020
+        return userRestController.get(USER_ID);
     }
 
+    @Transactional
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public void update(@RequestBody User user) {
-        userRestController.update(user, 0); // FIXME: 27.10.2020
+        userRestController.update(user, USER_ID);
     }
 
+    @Transactional
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping
     public void delete() {
-        userRestController.delete(0); // FIXME: 27.10.2020
+        userRestController.delete(USER_ID);
     }
 }

@@ -4,7 +4,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(name = "name_uniq_idx", columnNames = "name"))
-public class User {
+public class User implements HasId<Integer> {
     @Id
     @SequenceGenerator(name = "user_seq", sequenceName = "user_seq", allocationSize = 1, initialValue = 10000)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
@@ -17,9 +17,13 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role role = Role.USER;
 
     public User() {
+    }
+
+    public User(String name, String password) {
+        this(name, password, Role.USER);
     }
 
     public User(String name, String password, Role role) {

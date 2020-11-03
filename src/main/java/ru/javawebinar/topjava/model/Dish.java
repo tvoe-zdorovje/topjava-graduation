@@ -1,15 +1,17 @@
 package ru.javawebinar.topjava.model;
 
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import javax.persistence.*;
 
-import static ru.javawebinar.topjava.model.Restaurant.*;
-
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 @Entity
 @Table(name = "dishes", uniqueConstraints = @UniqueConstraint(name = "menu_dish_uniq_idx", columnNames = {"menu_id", "name"}))
-public class Dish {
+public class Dish implements HasId<Integer> {
     @Id
     @SequenceGenerator(name = "dish_seq", sequenceName = "dish_seq", allocationSize = 1, initialValue = 100000)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dish_seq")
@@ -21,18 +23,22 @@ public class Dish {
     @Column(name = "price", nullable = false)
     private Long price;
 
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false,
             foreignKey = @ForeignKey(name = "menu_fkey",
                     foreignKeyDefinition = "FOREIGN KEY (menu_id) REFERENCES menu(id) ON DELETE CASCADE"))
     private Menu menu;
 
-
-
     public Dish() {
     }
 
     public Dish(String name, Long price) {
+        this(null, name, price);
+    }
+
+    public Dish(Integer id, String name, Long price) {
+        this.id = id;
         this.name = name;
         this.price = price;
     }
@@ -67,5 +73,13 @@ public class Dish {
 
     public void setMenu(Menu menu) {
         this.menu = menu;
+    }
+
+    @Override
+    public String toString() {
+        return "Dish{" +
+                "name='" + name + '\'' +
+                ", price=" + price +
+                '}';
     }
 }
