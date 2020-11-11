@@ -1,6 +1,7 @@
 package ru.javawebinar.topjava.model;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(name = "name_uniq_idx", columnNames = "name"))
@@ -72,5 +73,27 @@ public class User implements HasId<Integer> {
 
     public enum Role {
         USER, ADMIN
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", role=" + role +
+                '}';
     }
 }

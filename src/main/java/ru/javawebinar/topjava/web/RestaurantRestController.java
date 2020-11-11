@@ -1,6 +1,8 @@
 package ru.javawebinar.topjava.web;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -33,6 +35,7 @@ import static ru.javawebinar.topjava.util.RestaurantUtils.convert;
 @RestController
 @RequestMapping(value = "/restaurants", produces = MediaType.APPLICATION_JSON_VALUE)
 public class RestaurantRestController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestaurantRestController.class);
 
     private final RestaurantRepository restaurantRepository;
 
@@ -43,7 +46,9 @@ public class RestaurantRestController {
 
     @Transactional
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestaurantTO> create(@RequestBody RestaurantTO restaurantTO) throws UnavailableException {
+    public ResponseEntity<RestaurantTO> register(@RequestBody RestaurantTO restaurantTO) throws UnavailableException {
+        LOGGER.info("register restaurant: {}.", restaurantTO);
+
         checkTime();
 
         restaurantTO.getMenu().forEach(dish -> dish.setId(null));
@@ -55,12 +60,13 @@ public class RestaurantRestController {
 
     @GetMapping
     public List<RestaurantTO> getAll() {
-        List<Restaurant> all = restaurantRepository.findAll();
-        return convert(all);
+        LOGGER.info("get all restaurants.");
+        return convert(restaurantRepository.findAll());
     }
 
     @GetMapping("/{name}")
     public RestaurantTO get(@PathVariable String name) {
+        LOGGER.info("get restaurant [{}].", name);
         return convert(safeGet(name));
     }
 
@@ -68,6 +74,8 @@ public class RestaurantRestController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/{name}")
     public void rename(@RequestBody RestaurantTO restaurantTO, @PathVariable String name) {
+        LOGGER.info("update restaurant [{}]: {}.", name, restaurantTO);
+
         if (restaurantRepository.update(name, restaurantTO.getName()) == 0) {
             throw new NotFoundException(String.format("Restaurant '%s' could not be found", name));
         }
@@ -77,6 +85,8 @@ public class RestaurantRestController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{name}")
     public void delete(@PathVariable String name) throws UnavailableException {
+        LOGGER.info("delete restaurant [{}].", name);
+
         checkTime();
 
         if (restaurantRepository.delete(name) == 0) {
@@ -92,6 +102,8 @@ public class RestaurantRestController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(value = "/{name}/menu", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void updateMenu(@PathVariable String name, @RequestBody List<Dish> dishes) throws UnavailableException {
+        LOGGER.info("update restaurant [{}] menu: {}.", name, dishes);
+
         checkTime();
 
         Restaurant restaurant = safeGet(name);
@@ -127,6 +139,8 @@ public class RestaurantRestController {
     @Transactional
     @PostMapping("/{name}/vote")
     public void vote(@PathVariable String name) throws UnavailableException {
+        LOGGER.info("user [{}] votes for restaurant [{}].", ProfileRestController.MOCK_USER.id(), name);
+
         LocalTime now = TimeUtils.now().toLocalTime();
         if (now.isAfter(LocalTime.of(11, 0))) {
             throw new UnavailableException("The voting service is not available after 11:00",
@@ -144,6 +158,7 @@ public class RestaurantRestController {
 
     @GetMapping("/{name}/vote")
     public int getNumOfVotes(@PathVariable String name) {
+        LOGGER.info("get the number of votes for the restaurant [{}].", name);
         return voteRepository.getCount(name);
     }
 
@@ -151,10 +166,11 @@ public class RestaurantRestController {
     @GetMapping("/statistic")
     public List<RestaurantTO> getStatistic(@RequestParam(value = "from", required = false)
                                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        LOGGER.info("get statistic of votes from {}", date == null ? "current date" : date);
+
         if (date == null) date = TimeUtils.now().toLocalDate();
+
 
         return convert(voteRepository.getVotesMap(date));
     }
-
-
 }

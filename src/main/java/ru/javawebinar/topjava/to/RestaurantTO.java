@@ -46,7 +46,7 @@ public class RestaurantTO {
         return "RestaurantTO{" +
                 "name='" + name + '\'' +
                 ", menuDate=" + menuDate +
-                ", menu=" + menu +
+                ", menu=" + (menu == null ? "null" : menu) +
                 ", numOfVotes=" + numOfVotes +
                 '}';
     }

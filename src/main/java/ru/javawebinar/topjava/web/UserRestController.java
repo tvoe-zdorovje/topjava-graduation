@@ -1,5 +1,7 @@
 package ru.javawebinar.topjava.web;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserRestController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserRestController.class);
 
     private final UserRepository repository;
 
@@ -28,6 +31,8 @@ public class UserRestController {
     @Transactional
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<User> register(@RequestBody User user) {
+        LOGGER.info("register user: {}.", user);
+
         ValidationUtils.checkNew(user);
         User created = repository.save(user);
 
@@ -38,17 +43,20 @@ public class UserRestController {
 
     @GetMapping
     public List<User> getAll() {
+        LOGGER.info("get all users");
         return repository.findAll();
     }
 
     @GetMapping("/id{id}")
     public User get(@PathVariable int id) {
+        LOGGER.info("get user [{}].", id);
         return repository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format("User with id %d could not be found", id)));
     }
 
     @GetMapping("/{name}")
     public User get(@PathVariable String name) {
+        LOGGER.info("get user [{}].", name);
         return repository.findByName(name)
                 .orElseThrow(() -> new NotFoundException(String.format("User with name '%s' could not be found", name)));
     }
@@ -57,6 +65,8 @@ public class UserRestController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(value = "/id{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void update(@RequestBody User user, @PathVariable int id) {
+        LOGGER.info("update user [{}]: {}.", id, user);
+
         ValidationUtils.assureIdConsistent(user, id);
         repository.save(user);
     }
@@ -65,6 +75,7 @@ public class UserRestController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/id{id}")
     public void delete(@PathVariable int id) {
+        LOGGER.info("delete user [{}].", id);
         repository.deleteById(id);
     }
 }

@@ -90,7 +90,7 @@ public class Dish implements HasId<Integer> {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", price=" + price +
-                ", menu=" + menu.getDate() +
+                ", menu=" + (menu == null ? "null" : menu.getDate()) +
                 '}';
     }
 }

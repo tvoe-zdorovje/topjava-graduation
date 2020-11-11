@@ -1,5 +1,7 @@
 package ru.javawebinar.topjava.web;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import ru.javawebinar.topjava.util.RestaurantUtils;
 @RestController
 @RequestMapping(value = "/profile", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ProfileRestController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProfileRestController.class);
 
     public static final User MOCK_USER = new User(2, "MOCK", "Pass", User.Role.USER);
 
@@ -27,6 +30,7 @@ public class ProfileRestController {
 
     @GetMapping
     public User get() {
+        LOGGER.info("get user [{}]", MOCK_USER.getId());
         return userRestController.get(MOCK_USER.id());
     }
 
@@ -34,6 +38,7 @@ public class ProfileRestController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public void update(@RequestBody User user) {
+        LOGGER.info("update user [{}]: {}", MOCK_USER.getId(), user);
         userRestController.update(user, MOCK_USER.id());
     }
 
@@ -41,6 +46,7 @@ public class ProfileRestController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping
     public void delete() {
+        LOGGER.info("delete user [{}]", MOCK_USER.getId());
         userRestController.delete(MOCK_USER.id());
     }
 
@@ -48,6 +54,8 @@ public class ProfileRestController {
 
     @GetMapping("/vote")
     public ResponseEntity<RestaurantTO> getSelectedRestaurant() {
+        LOGGER.info("get a user-selected restaurant [{}].", MOCK_USER.getId());
+
         Vote vote = voteRepository.findByUser(MOCK_USER.id());
 
         if (vote == null || vote.getMenu() == null)
