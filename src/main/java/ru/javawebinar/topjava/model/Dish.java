@@ -1,14 +1,10 @@
 package ru.javawebinar.topjava.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
+import java.util.Objects;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
 @Entity
 @Table(name = "dishes", uniqueConstraints = @UniqueConstraint(name = "menu_dish_uniq_idx", columnNames = {"menu_id", "name"}))
 public class Dish implements HasId<Integer> {
@@ -23,7 +19,7 @@ public class Dish implements HasId<Integer> {
     @Column(name = "price", nullable = false)
     private Long price;
 
-    @JsonBackReference
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false,
             foreignKey = @ForeignKey(name = "menu_fkey",
@@ -76,10 +72,25 @@ public class Dish implements HasId<Integer> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Dish dish = (Dish) o;
+        return id.equals(dish.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
     public String toString() {
         return "Dish{" +
-                "name='" + name + '\'' +
+                "id=" + id +
+                ", name='" + name + '\'' +
                 ", price=" + price +
+                ", menu=" + menu.getDate() +
                 '}';
     }
 }

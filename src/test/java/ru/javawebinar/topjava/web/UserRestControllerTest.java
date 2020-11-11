@@ -37,7 +37,7 @@ class UserRestControllerTest extends AbstractControllerTest {
                 .andReturn();
 
         User actual = TestUtils.readValueFromMvcResult(result, User.class);
-        Integer id = actual.getId();
+        Integer id = actual.id();
 
         Assertions.assertThat(id).isNotNull();
         expected.setId(id);

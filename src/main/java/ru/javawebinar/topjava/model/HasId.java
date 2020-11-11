@@ -1,6 +1,7 @@
 package ru.javawebinar.topjava.model;
 
 import org.springframework.data.domain.Persistable;
+import org.springframework.util.Assert;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
@@ -14,5 +15,11 @@ public interface HasId<ID> extends Persistable<ID> {
     @Override
     default boolean isNew() {
         return getId()==null;
+    }
+
+    default ID id(){
+        ID id = getId();
+        Assert.notNull(id, "Entity must has id");
+        return id;
     }
 }

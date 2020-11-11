@@ -7,8 +7,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
+import ru.javawebinar.topjava.to.RestaurantTO;
+import ru.javawebinar.topjava.util.RestaurantUtils;
 import ru.javawebinar.topjava.util.TestUtils;
 import ru.javawebinar.topjava.util.json.JsonUtils;
+import ru.javawebinar.topjava.util.testData.RestaurantTestData;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -16,12 +19,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static ru.javawebinar.topjava.util.testData.UserTestData.*;
 
 class ProfileRestControllerTest extends AbstractControllerTest{
-
     private final String URL = "/profile";
 
     @Autowired
     UserRepository userRepository;
-
 
     @Test
     void get() throws Exception {
@@ -54,5 +55,17 @@ class ProfileRestControllerTest extends AbstractControllerTest{
                 .andExpect(status().isNoContent());
 
         USER_MATCHER.assertMatch(userRepository.findAll(), ADMIN_1, USER_3);
+    }
+
+    @Test
+    void getSelectedRestaurant() throws Exception {
+        MvcResult result = perform(MockMvcRequestBuilders.get(URL + "/vote"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        RestaurantTO restaurantTO = TestUtils.readValueFromMvcResult(result, RestaurantTO.class);
+        RestaurantTestData.RESTAURANT_MATCHER.assertMatch(RestaurantUtils.convert(restaurantTO), RestaurantTestData.Godzik);
     }
 }

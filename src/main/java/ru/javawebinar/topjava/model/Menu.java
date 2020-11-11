@@ -1,19 +1,14 @@
 package ru.javawebinar.topjava.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import org.hibernate.annotations.BatchSize;
+import ru.javawebinar.topjava.util.exception.TimeUtils;
 
 import javax.persistence.*;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
 @Entity
 @Table(name = "menu", uniqueConstraints = @UniqueConstraint(name = "date_uniq_idx", columnNames = {"restaurant", "date"}))
 public class Menu {
@@ -22,15 +17,14 @@ public class Menu {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "menu_seq")
     private Integer id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant", nullable = false, foreignKey = @ForeignKey(name = "restaurant_fkey",
             foreignKeyDefinition = "FOREIGN KEY (restaurant) REFERENCES restaurants(name) ON DELETE CASCADE ON UPDATE CASCADE"))
-    @JsonBackReference
     private Restaurant restaurant;
 
     @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @BatchSize(size = 200)
     @OrderBy("name")
-    @JsonProperty("menu")
     private List<Dish> dishes;
 
     @Column(name = "date", nullable = false)
@@ -47,7 +41,7 @@ public class Menu {
     public Menu(Integer id, List<Dish> dishes) {
         this.id = id;
         setDishes(dishes);
-        this.date = LocalDate.now(ZoneId.of("America/Montreal"));
+        this.date = TimeUtils.now().toLocalDate();
     }
 
     public Integer getId() {
@@ -83,10 +77,28 @@ public class Menu {
         this.date = date;
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Menu menu = (Menu) o;
+        if (id==null || menu.id==null) return false;
+        return id.equals(menu.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
     @Override
     public String toString() {
         return "Menu{" +
-                "date=" + date +
+                "id=" + id +
+                ", restaurant=" + restaurant.getName() +
+                ", dishes=" + dishes +
+                ", date=" + date +
                 '}';
     }
 }

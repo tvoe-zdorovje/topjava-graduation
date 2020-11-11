@@ -1,15 +1,10 @@
 package ru.javawebinar.topjava.model;
 
-import com.fasterxml.jackson.annotation.*;
-
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "name")
 @Entity
 @Table(name = "restaurants")
 public class Restaurant implements HasId<String> {
@@ -46,12 +41,6 @@ public class Restaurant implements HasId<String> {
         return name;
     }
 
-    @JsonGetter("menu")
-    public List<Dish> getDishes() {
-        return menu == null ? Collections.emptyList() : menu.getDishes();
-    }
-
-    @JsonSetter("menu")
     public void setMenu(List<Dish> menu) {
         setMenu(new Menu(menu));
     }
@@ -76,9 +65,23 @@ public class Restaurant implements HasId<String> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Restaurant that = (Restaurant) o;
+        return name.equals(that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
+
+    @Override
     public String toString() {
         return "Restaurant{" +
                 "name='" + name + '\'' +
+                ", menu=" + menu +
                 '}';
     }
 }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import ru.javawebinar.topjava.View;
 
 public class JacksonObjectMapper extends ObjectMapper {
 
@@ -18,6 +19,8 @@ public class JacksonObjectMapper extends ObjectMapper {
         setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
         setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        setConfig(getSerializationConfig().withView(View.Regular.class));
     }
 
     public static ObjectMapper getMapper() {

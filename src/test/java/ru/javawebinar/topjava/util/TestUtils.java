@@ -1,10 +1,15 @@
 package ru.javawebinar.topjava.util;
 
-import org.assertj.core.api.Assertions;
 import org.springframework.test.web.servlet.MvcResult;
+import ru.javawebinar.topjava.util.exception.TimeUtils;
 import ru.javawebinar.topjava.util.json.JsonUtils;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.time.*;
 import java.util.List;
 
 public class TestUtils {
@@ -17,24 +22,24 @@ public class TestUtils {
         return JsonUtils.readValuesFromJson(mvcResult.getResponse().getContentAsString(), clazz);
     }
 
-    public static class TestMatcher<T> {
-        private final String[] fieldsToIgnore;
+    private static Field clockField;
 
-        public TestMatcher(String... fieldsToIgnore) {
-            this.fieldsToIgnore = fieldsToIgnore;
-        }
+    //https://stackoverflow.com/questions/56039341/get-declared-fields-of-java-lang-reflect-fields-in-jdk12#answer-56043252
+    static {
+        try {
+            MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(Field.class, MethodHandles.lookup());
+            VarHandle modifiers = lookup.findVarHandle(Field.class, "modifiers", int.class);
 
-        public void assertMatch(T actual, T expected) {
-            Assertions.assertThat(actual).usingRecursiveComparison().ignoringFields(fieldsToIgnore).isEqualTo(expected);
-        }
+            clockField = TimeUtils.class.getDeclaredField("CLOCK");
+            clockField.setAccessible(true);
 
-        @SafeVarargs
-        public final void assertMatch(List<T> actual, T... expected) {
-            assertMatch(actual, List.of(expected));
+            modifiers.set(clockField, clockField.getModifiers() & ~Modifier.FINAL);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
         }
+    }
 
-        public void assertMatch(List<T> actual, List<T> expected) {
-            Assertions.assertThat(actual).usingElementComparatorIgnoringFields(fieldsToIgnore).isEqualTo(expected);
-        }
+    public static void setTime(int hours, int minutes) throws IllegalAccessException {
+        clockField.set(null, Clock.fixed(LocalDateTime.of(LocalDate.now(), LocalTime.of(hours, minutes)).toInstant(ZoneOffset.UTC), ZoneId.of("UTC")));
     }
 }

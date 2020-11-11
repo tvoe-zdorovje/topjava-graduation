@@ -32,7 +32,7 @@ public class UserRestController {
         User created = repository.save(user);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/{id}")
-                .buildAndExpand(created.getId()).toUri();
+                .buildAndExpand(created.id()).toUri();
         return ResponseEntity.created(uri).body(created);
     }
 

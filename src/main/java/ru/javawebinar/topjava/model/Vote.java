@@ -1,37 +1,61 @@
 package ru.javawebinar.topjava.model;
 
-import java.util.Date;
+import javax.persistence.*;
 
-public class Vote {
-    private final Integer id;
-    private final User user;
-    private final Restaurant restaurant;
-    private final Date date;
+@Entity
+@Table(name = "vote")
+public class Vote implements HasId<Integer>{
+    @Id
+    @SequenceGenerator(name = "vote_seq", sequenceName = "vote_seq", initialValue = 1000, allocationSize = 1)
+    @GeneratedValue(generator = "vote_seq", strategy = GenerationType.SEQUENCE)
+    private Integer id;
 
-    public Vote(User user, Restaurant restaurant) {
-        this(null, user, restaurant);
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "user_fk",
+            foreignKeyDefinition = "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"))
+    private User user;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "menu_id", nullable = false, foreignKey = @ForeignKey(name = "menu_fk",
+            foreignKeyDefinition = "FOREIGN KEY (menu_id) REFERENCES menu(id) ON DELETE CASCADE ON UPDATE CASCADE"))
+    private Menu menu;
+
+    public Vote() {
     }
 
-    public Vote(Integer id, User user, Restaurant restaurant) {
+    public Vote(User user, Menu menu) {
+        this(null, user, menu);
+    }
+
+    public Vote(Integer id, User user, Menu menu) {
         this.id = id;
         this.user = user;
-        this.restaurant = restaurant;
-        this.date = new Date();
+        this.menu = menu;
     }
 
+    @Override
     public Integer getId() {
         return id;
+    }
+
+    @Override
+    public void setId(Integer integer) {
+        this.id=integer;
     }
 
     public User getUser() {
         return user;
     }
 
-    public Restaurant getRestaurant() {
-        return restaurant;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    public Date getDate() {
-        return new Date(date.getTime());
+    public Menu getMenu() {
+        return menu;
+    }
+
+    public void setMenu(Menu menu) {
+        this.menu = menu;
     }
 }
