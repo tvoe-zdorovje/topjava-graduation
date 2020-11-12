@@ -1,6 +1,11 @@
 package ru.javawebinar.topjava.util;
 
+import org.assertj.core.api.Assertions;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+import ru.javawebinar.topjava.util.exception.ErrorInfo;
+import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.util.exception.TimeUtils;
 import ru.javawebinar.topjava.util.json.JsonUtils;
 
@@ -12,6 +17,10 @@ import java.lang.reflect.Modifier;
 import java.time.*;
 import java.util.List;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 public class TestUtils {
 
     public static <T> T readValueFromMvcResult(MvcResult mvcResult, Class<T> clazz) throws UnsupportedEncodingException {
@@ -20,6 +29,16 @@ public class TestUtils {
 
     public static <T> List<T> readValuesFromMvcResult(MvcResult mvcResult, Class<T> clazz) throws UnsupportedEncodingException {
         return JsonUtils.readValuesFromJson(mvcResult.getResponse().getContentAsString(), clazz);
+    }
+
+    public static void assertUnprocessableEntity(ResultActions actions, ErrorType errorType) throws Exception {
+        MvcResult result = actions.andDo(print())
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        ErrorInfo errorInfo = TestUtils.readValueFromMvcResult(result, ErrorInfo.class);
+        Assertions.assertThat(errorInfo.getType()).isEqualTo(errorType.getName());
     }
 
     private static Field clockField;

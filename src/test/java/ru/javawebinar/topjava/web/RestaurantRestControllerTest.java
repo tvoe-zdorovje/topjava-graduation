@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.javawebinar.topjava.model.Dish;
 import ru.javawebinar.topjava.model.Menu;
@@ -14,10 +15,11 @@ import ru.javawebinar.topjava.repository.RestaurantRepository;
 import ru.javawebinar.topjava.repository.VoteRepository;
 import ru.javawebinar.topjava.to.RestaurantTO;
 import ru.javawebinar.topjava.util.TestUtils;
+import ru.javawebinar.topjava.util.exception.ErrorInfo;
+import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.util.json.JsonUtils;
 import ru.javawebinar.topjava.util.testData.UserTestData;
 
-import javax.servlet.UnavailableException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ru.javawebinar.topjava.util.RestaurantUtils.convert;
+import static ru.javawebinar.topjava.util.TestUtils.assertUnprocessableEntity;
 import static ru.javawebinar.topjava.util.TestUtils.setTime;
 import static ru.javawebinar.topjava.util.testData.RestaurantTestData.*;
 
@@ -50,16 +53,6 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
                 .andReturn();
 
         assertMatch(result, expected);
-    }
-
-    @Test
-    void createLate() throws Exception {
-        Restaurant expected = getNewRestaurant();
-
-        setTime(11, 0);
-        org.junit.jupiter.api.Assertions.assertThrows(UnavailableException.class, () -> perform(post(URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.writeValueToJson(convert(expected))))); // TODO refactor after implementing an exception handler
     }
 
     @Test
@@ -107,7 +100,7 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
     @Test
     void rename() throws Exception {
         Restaurant expected = getNewRestaurant();
-        expected.setMenu(copy(Godzik.getMenu().getDishes()));
+        expected.setMenu(copy(Godzik.getMenu().getDishes())); // menu will be ignored
         perform(put(URL + Godzik.id())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtils.writeValueToJson(convert(expected))))
@@ -129,13 +122,6 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
         List<Restaurant> actual = restaurantRepository.findAll();
 
         RESTAURANT_MATCHER.assertMatch(actual, BurgerQueen, McDnlds);
-    }
-
-    @Test
-    void deleteLate() throws Exception {
-        setTime(11, 0);
-        org.junit.jupiter.api.Assertions.assertThrows(UnavailableException.class, () ->
-                perform(MockMvcRequestBuilders.delete(URL + Godzik.id()))); // TODO refactor after implementing an exception handler
     }
 
     @Test
@@ -185,22 +171,11 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
         return restaurantRepository.findById(expected.getName()).orElseThrow();
     }
 
-    @Test
-    void updateLate() throws IllegalAccessException {
-        setTime(11, 0);
-        org.junit.jupiter.api.Assertions.assertThrows(UnavailableException.class, () -> perform(put(URL + Godzik.getName() + "/menu")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.writeValueToJson(Godzik.getMenu().getDishes())))); // TODO refactor after implementing an exception handler
-    }
-
     @Autowired
     VoteRepository voteRepository;
 
     @Test
     void vote() throws Exception {
-        setTime(11, 30);
-        org.junit.jupiter.api.Assertions.assertThrows(UnavailableException.class, () -> perform(post(URL + McDnlds.getName() + "/vote"))); // TODO refactor after implementing an exception handler
-
         Assertions.assertThat(voteRepository.getCount(Godzik.id())).isEqualTo(1);
         Assertions.assertThat(voteRepository.getCount(McDnlds.id())).isEqualTo(1);
         Restaurant initChoice = voteRepository.findByUser(UserTestData.USER_2_ID).getMenu().getRestaurant();
@@ -272,5 +247,89 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
         Assertions.assertThat(actual).usingRecursiveFieldByFieldElementComparator(configuration).isEqualTo(expected);
     }
 
-    // TODO not found tests
+
+    // late
+    @Test
+    void createLate() throws Exception {
+        setTime(11, 0);
+        assertLate(perform(post(URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(convert(getNewRestaurant())))));
+    }
+
+    @Test
+    void updateMenuLate() throws Exception {
+        setTime(11, 0);
+        assertLate(perform(put(URL + Godzik.getName() + "/menu")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(getNewMenu()))));
+    }
+
+    @Test
+    void deleteLate() throws Exception {
+        setTime(11, 0);
+        assertLate(perform(MockMvcRequestBuilders.delete(URL + Godzik.id())));
+    }
+
+    @Test
+    void voteLate() throws Exception {
+        setTime(11, 30);
+        assertLate(perform(post(URL + McDnlds.getName() + "/vote")));
+    }
+
+    void assertLate(ResultActions action) throws Exception {
+        MvcResult result = action.andDo(print())
+                .andExpect(status().isLocked())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        ErrorInfo errorInfo = TestUtils.readValueFromMvcResult(result, ErrorInfo.class);
+        Assertions.assertThat(errorInfo.getType()).isEqualTo(ErrorType.TEMPORARILY_UNAVAILABLE.getName());
+    }
+
+    // not found tests
+
+    @Test
+    void getNotFound() throws Exception {
+        ResultActions actions = perform(MockMvcRequestBuilders.get(URL + NOT_FOUNT_NAME));
+        assertUnprocessableEntity(actions, ErrorType.DATA_NOT_FOUND);
+    }
+
+    @Test
+    void renameNotFound() throws Exception {
+        ResultActions actions = perform(put(URL + NOT_FOUNT_NAME)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(convert(getNewRestaurant()))));
+        assertUnprocessableEntity(actions, ErrorType.DATA_NOT_FOUND);
+    }
+
+    @Test
+    void deleteNotFound() throws Exception {
+        setTime(9, 0);
+        ResultActions actions = perform(MockMvcRequestBuilders.delete(URL + NOT_FOUNT_NAME));
+        assertUnprocessableEntity(actions, ErrorType.DATA_NOT_FOUND);
+    }
+
+    @Test
+    void updateMenuNotFound() throws Exception {
+        setTime(9, 0);
+        List<Dish> newMenu = getNewMenu();
+        ResultActions actions = perform(put(URL + NOT_FOUNT_NAME + "/menu")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(newMenu)));
+        assertUnprocessableEntity(actions, ErrorType.DATA_NOT_FOUND);
+    }
+
+    @Test
+    void voteNotFound() throws Exception {
+        setTime(9, 0);
+        ResultActions actions = perform(post(URL + NOT_FOUNT_NAME + "/vote"));
+        assertUnprocessableEntity(actions, ErrorType.DATA_NOT_FOUND);
+    }
+
+
+    // TODO invalid
+
+
+    // TODO unauth
 }

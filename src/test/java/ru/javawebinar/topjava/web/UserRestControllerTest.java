@@ -5,10 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
-import ru.javawebinar.topjava.util.TestUtils;
+import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.util.json.JsonUtils;
 
 import java.util.List;
@@ -17,6 +18,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.javawebinar.topjava.model.User.Role.*;
+import static ru.javawebinar.topjava.util.TestUtils.*;
 import static ru.javawebinar.topjava.util.testData.UserTestData.*;
 
 class UserRestControllerTest extends AbstractControllerTest {
@@ -36,7 +39,7 @@ class UserRestControllerTest extends AbstractControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        User actual = TestUtils.readValueFromMvcResult(result, User.class);
+        User actual = readValueFromMvcResult(result, User.class);
         Integer id = actual.id();
 
         Assertions.assertThat(id).isNotNull();
@@ -54,19 +57,19 @@ class UserRestControllerTest extends AbstractControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        List<User> actual = TestUtils.readValuesFromMvcResult(result, User.class);
+        List<User> actual = readValuesFromMvcResult(result, User.class);
         USER_MATCHER.assertMatch(actual, ADMIN_1, USER_2, USER_3);
     }
 
     @Test
     void get() throws Exception {
-        MvcResult result = perform(MockMvcRequestBuilders.get(URL+ "id" + USER_2_ID))
+        MvcResult result = perform(MockMvcRequestBuilders.get(URL + "id" + USER_2_ID))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        User actual = TestUtils.readValueFromMvcResult(result, User.class);
+        User actual = readValueFromMvcResult(result, User.class);
         USER_MATCHER.assertMatch(actual, USER_2);
     }
 
@@ -78,13 +81,13 @@ class UserRestControllerTest extends AbstractControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        User actual = TestUtils.readValueFromMvcResult(result, User.class);
+        User actual = readValueFromMvcResult(result, User.class);
         USER_MATCHER.assertMatch(actual, USER_2);
     }
 
     @Test
     void update() throws Exception {
-        perform(MockMvcRequestBuilders.put(URL+ "id" + USER_2_ID)
+        perform(MockMvcRequestBuilders.put(URL + "id" + USER_2_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtils.writeValueToJson(getUpdated())))
                 .andDo(print())
@@ -96,28 +99,33 @@ class UserRestControllerTest extends AbstractControllerTest {
 
     @Test
     void delete() throws Exception {
-        perform(MockMvcRequestBuilders.delete(URL+ "id" + USER_2_ID))
+        perform(MockMvcRequestBuilders.delete(URL + "id" + USER_2_ID))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
         USER_MATCHER.assertMatch(userRepository.findAll(), ADMIN_1, USER_3);
     }
 
-    // TODO Not found
+    // Not found
     @Test
     void getNotFound() throws Exception {
-        //TODO
+        ResultActions actions = perform(MockMvcRequestBuilders.get(URL + "id" + NOT_FOUND_ID));
+        assertUnprocessableEntity(actions, ErrorType.DATA_NOT_FOUND);
     }
 
     @Test
-    void updateNotFound() throws Exception {
-        //TODO
+    void getByNameNotFound() throws Exception {
+        ResultActions actions = perform(MockMvcRequestBuilders.get(URL + NOT_FOUND_ID));
+        assertUnprocessableEntity(actions, ErrorType.DATA_NOT_FOUND);
     }
 
     @Test
     void deleteNotFound() throws Exception {
-        //TODO
+        ResultActions actions = perform(MockMvcRequestBuilders.delete(URL + "id" + NOT_FOUND_ID));
+        assertUnprocessableEntity(actions, ErrorType.DATA_NOT_FOUND);
     }
+
+    // TODO invalid
 
     // TODO unauth
 }

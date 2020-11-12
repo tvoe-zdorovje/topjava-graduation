@@ -8,10 +8,21 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${user.dir}/topjava-graduation-log/log.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
-        </rollingPolicy><q></q>
+        </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{50}.%M:%L - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %class{50} - %msg%n%ex{short}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="error" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${user.dir}/topjava-graduation-log/error/log.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %class{50}.%M:%L - %msg%n%ex{full}</pattern>
         </encoder>
     </appender>
 
@@ -22,9 +33,11 @@
         </encoder>
     </appender>
 
-    <logger name="ru.javawebinar.topjava" level="info" additivity="false">
+    <logger name="ru.javawebinar.topjava" level="info">
         <appender-ref ref="file"/>
-        <appender-ref ref="console"/>
+    </logger>
+    <logger name="ru.javawebinar.topjava.web.RestControllerExceptionHandler" level="warn">
+        <appender-ref ref="error"/>
     </logger>
 
     <root level="info">

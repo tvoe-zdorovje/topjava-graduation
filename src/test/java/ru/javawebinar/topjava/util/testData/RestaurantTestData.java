@@ -55,6 +55,8 @@ public class RestaurantTestData {
     public static final Restaurant Godzik = new Restaurant("Godzik", MENU_22_Godzik);
     public static final Restaurant McDnlds = new Restaurant("McDnlds", MENU_12_McDnlds);
 
+    public static final String NOT_FOUNT_NAME = "Not Found";
+
     public static List<Dish> getNewMenu() {
         return List.of(new Dish("New_1", 23L), new Dish("New_2", 32L),
                 new Dish("New_3", 12L));

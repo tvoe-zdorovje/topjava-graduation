@@ -2,6 +2,7 @@ package ru.javawebinar.topjava.web;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -10,11 +11,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
-import ru.javawebinar.topjava.util.ValidationUtils;
+import ru.javawebinar.topjava.util.exception.IllegalRequestDataException;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 
 @Transactional(readOnly = true)
 @RestController
@@ -33,7 +35,10 @@ public class UserRestController {
     public ResponseEntity<User> register(@RequestBody User user) {
         LOGGER.info("register user: {}.", user);
 
-        ValidationUtils.checkNew(user);
+        if (!user.isNew()) {
+            throw new IllegalRequestDataException("User must be new (id=null)");
+        }
+
         User created = repository.save(user);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/{id}")
@@ -67,7 +72,13 @@ public class UserRestController {
     public void update(@RequestBody User user, @PathVariable int id) {
         LOGGER.info("update user [{}]: {}.", id, user);
 
-        ValidationUtils.assureIdConsistent(user, id);
+        if (user.isNew()) {
+            user.setId(id);
+        } else {
+            if (!Objects.equals(user.getId(), id))
+                throw new IllegalRequestDataException("User must be with id=" + id);
+        }
+
         repository.save(user);
     }
 
@@ -76,6 +87,10 @@ public class UserRestController {
     @DeleteMapping("/id{id}")
     public void delete(@PathVariable int id) {
         LOGGER.info("delete user [{}].", id);
-        repository.deleteById(id);
+        try {
+            repository.deleteById(id);
+        } catch (EmptyResultDataAccessException e) {
+            throw new NotFoundException(String.format("User with id %d could not be found", id));
+        }
     }
 }

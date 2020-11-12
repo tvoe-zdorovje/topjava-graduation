@@ -26,7 +26,7 @@ public class UserTestData {
     }
 
     public static User getUpdated() {
-        return new User(USER_2_ID, "User_2 updated", "updatedpassword", USER);
+        return new User(USER_2_ID, USER_2.getName(), "updatedpassword", ADMIN);
     }
 
 
