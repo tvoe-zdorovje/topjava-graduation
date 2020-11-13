@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import ru.javawebinar.topjava.View;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 import ru.javawebinar.topjava.util.exception.IllegalRequestDataException;
@@ -32,8 +34,10 @@ public class UserRestController {
 
     @Transactional
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<User> register(@RequestBody User user) {
+    public ResponseEntity<User> register(@Validated(View.ValidatedUI.class) @RequestBody User user) {
         LOGGER.info("register user: {}.", user);
+
+        validateName(user);
 
         if (!user.isNew()) {
             throw new IllegalRequestDataException("User must be new (id=null)");
@@ -69,8 +73,10 @@ public class UserRestController {
     @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(value = "/id{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void update(@RequestBody User user, @PathVariable int id) {
+    public void update(@Validated(View.ValidatedUI.class) @RequestBody User user, @PathVariable int id) {
         LOGGER.info("update user [{}]: {}.", id, user);
+
+        validateName(user);
 
         if (user.isNew()) {
             user.setId(id);
@@ -80,6 +86,13 @@ public class UserRestController {
         }
 
         repository.save(user);
+    }
+
+    private void validateName(User newUser) {
+        String name = newUser.getName();
+        User user = repository.findByName(name).orElse(newUser);
+        if (!user.equals(newUser))
+            throw new IllegalRequestDataException(String.format("User with name '%s' already exist!", name));
     }
 
     @Transactional

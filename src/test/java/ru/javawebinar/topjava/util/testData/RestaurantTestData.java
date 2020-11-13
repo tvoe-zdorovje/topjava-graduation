@@ -57,6 +57,8 @@ public class RestaurantTestData {
 
     public static final String NOT_FOUNT_NAME = "Not Found";
 
+    public static final Restaurant INVALID = new Restaurant("  ");
+
     public static List<Dish> getNewMenu() {
         return List.of(new Dish("New_1", 23L), new Dish("New_2", 32L),
                 new Dish("New_3", 12L));

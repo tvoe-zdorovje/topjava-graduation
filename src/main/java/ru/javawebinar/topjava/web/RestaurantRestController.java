@@ -17,13 +17,16 @@ import ru.javawebinar.topjava.model.Restaurant;
 import ru.javawebinar.topjava.model.Vote;
 import ru.javawebinar.topjava.repository.RestaurantRepository;
 import ru.javawebinar.topjava.repository.VoteRepository;
+import ru.javawebinar.topjava.to.MenuTO;
 import ru.javawebinar.topjava.to.RestaurantTO;
+import ru.javawebinar.topjava.util.exception.IllegalRequestDataException;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.util.exception.TimeUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.servlet.UnavailableException;
+import javax.validation.Valid;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -46,12 +49,13 @@ public class RestaurantRestController {
 
     @Transactional
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestaurantTO> register(@RequestBody RestaurantTO restaurantTO) throws UnavailableException {
+    public ResponseEntity<RestaurantTO> register(@Valid @RequestBody RestaurantTO restaurantTO) throws UnavailableException {
         LOGGER.info("register restaurant: {}.", restaurantTO);
 
         checkTime();
+        validateName(restaurantTO.getName());
 
-        restaurantTO.getMenu().forEach(dish -> dish.setId(null));
+        restaurantTO.getDishes().forEach(dish -> dish.setId(null));
         Restaurant created = restaurantRepository.save(convert(restaurantTO));
         URI uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/restaurants/{name}")
                 .buildAndExpand(created).toUri();
@@ -73,12 +77,19 @@ public class RestaurantRestController {
     @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/{name}")
-    public void rename(@RequestBody RestaurantTO restaurantTO, @PathVariable String name) {
+    public void rename(@Valid @RequestBody RestaurantTO restaurantTO, @PathVariable String name) {
         LOGGER.info("update restaurant [{}]: {}.", name, restaurantTO);
+
+        validateName(restaurantTO.getName());
 
         if (restaurantRepository.update(name, restaurantTO.getName()) == 0) {
             throw new NotFoundException(String.format("Restaurant '%s' could not be found", name));
         }
+    }
+
+    private void validateName(String name) {
+        if (restaurantRepository.findOne(name).isPresent())
+            throw new IllegalRequestDataException(String.format("Restaurant with name '%s' already exist!", name));
     }
 
     @Transactional
@@ -101,13 +112,14 @@ public class RestaurantRestController {
     @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(value = "/{name}/menu", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void updateMenu(@PathVariable String name, @RequestBody List<Dish> dishes) throws UnavailableException {
-        LOGGER.info("update restaurant [{}] menu: {}.", name, dishes);
+    public void updateMenu(@PathVariable String name, @Valid @RequestBody MenuTO menuTO) throws UnavailableException {
+        LOGGER.info("update restaurant [{}] menu: {}.", name, menuTO);
 
         checkTime();
 
         Restaurant restaurant = safeGet(name);
         Menu menu = restaurant.getMenu();
+        List<Dish> dishes = convert(menuTO).getDishes();
 
         if (menu.getDate().isEqual(TimeUtils.now().toLocalDate())) {
             entityManager.detach(menu);

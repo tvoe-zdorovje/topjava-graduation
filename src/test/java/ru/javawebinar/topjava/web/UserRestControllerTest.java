@@ -125,7 +125,54 @@ class UserRestControllerTest extends AbstractControllerTest {
         assertUnprocessableEntity(actions, ErrorType.DATA_NOT_FOUND);
     }
 
-    // TODO invalid
+    // invalid
+
+    @Test
+    void registerWithDuplicateName() throws Exception {
+        ResultActions actions = perform(post(URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(USER_2)));
+        assertUnprocessableEntity(actions, ErrorType.DATA_ERROR);
+
+        List<User> actual = userRepository.findAll();
+        USER_MATCHER.assertMatch(actual, ADMIN_1, USER_2, USER_3);
+    }
+
+    @Test
+    void registerInvalid() throws Exception {
+        ResultActions actions = perform(post(URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(new User("Name", "that's 22 characters"))));
+        assertUnprocessableEntity(actions, ErrorType.VALIDATION_ERROR);
+
+        List<User> actual = userRepository.findAll();
+        USER_MATCHER.assertMatch(actual, ADMIN_1, USER_2, USER_3);
+
+    }
+
+    @Test
+    void updateInvalid() throws Exception {
+        ResultActions actions = perform(MockMvcRequestBuilders.put(URL + "id" + USER_2_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(new User(USER_2_ID, "", "", ADMIN))));
+        assertUnprocessableEntity(actions, ErrorType.VALIDATION_ERROR);
+
+        List<User> actual = userRepository.findAll();
+        USER_MATCHER.assertMatch(actual, ADMIN_1, USER_2, USER_3);
+
+    }
+
+    @Test
+    void updateWithDuplicateName() throws Exception {
+        ResultActions actions = perform(MockMvcRequestBuilders.put(URL + "id" + USER_2_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(new User(USER_2_ID, USER_3.getName(), "newpass", ADMIN))));
+        assertUnprocessableEntity(actions, ErrorType.DATA_ERROR);
+
+        List<User> actual = userRepository.findAll();
+        USER_MATCHER.assertMatch(actual, ADMIN_1, USER_2, USER_3);
+    }
+
 
     // TODO unauth
 }

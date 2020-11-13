@@ -1,6 +1,10 @@
 package ru.javawebinar.topjava.model;
 
+import ru.javawebinar.topjava.View;
+
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.util.Objects;
 
 @Entity
@@ -11,13 +15,18 @@ public class User implements HasId<Integer> {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
     private Integer id;
 
-    @Column(name = "name", nullable = false)
+    @NotBlank
+    @Size(min = 2, max = 32)
+    @Column(name = "name", nullable = false, length = 32)
     private String name;
 
+    @NotBlank
+    @Size(min = 4, max = 16, groups = View.ValidatedUI.class)
     @Column(name = "password", nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
     private Role role = Role.USER;
 
     public User() {

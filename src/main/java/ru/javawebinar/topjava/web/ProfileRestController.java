@@ -13,6 +13,8 @@ import ru.javawebinar.topjava.repository.VoteRepository;
 import ru.javawebinar.topjava.to.RestaurantTO;
 import ru.javawebinar.topjava.util.RestaurantUtils;
 
+import javax.validation.Valid;
+
 @Transactional(readOnly = true)
 @RestController
 @RequestMapping(value = "/profile", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -37,8 +39,9 @@ public class ProfileRestController {
     @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void update(@RequestBody User user) {
+    public void update(@Valid @RequestBody User user) {
         LOGGER.info("update user [{}]: {}", MOCK_USER.getId(), user);
+        user.setId(MOCK_USER.getId());
         userRestController.update(user, MOCK_USER.id());
     }
 

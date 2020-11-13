@@ -19,6 +19,9 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, String> 
     @Query("SELECT r FROM Restaurant r LEFT JOIN FETCH r.menu m LEFT JOIN FETCH m.dishes WHERE r.name like ?1")
     Optional<Restaurant> findById(String name);
 
+    @Query("SELECT r FROM Restaurant r WHERE r.name=?1")
+    Optional<Restaurant> findOne(String name);
+
     @Modifying
     @Transactional
     @Query("UPDATE Restaurant r SET r.name=?2 WHERE r.name=?1")

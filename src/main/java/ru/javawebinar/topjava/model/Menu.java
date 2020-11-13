@@ -4,6 +4,8 @@ import org.hibernate.annotations.BatchSize;
 import ru.javawebinar.topjava.util.exception.TimeUtils;
 
 import javax.persistence.*;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,7 @@ public class Menu {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "menu_seq")
     private Integer id;
 
+    @NotNull
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant", nullable = false, foreignKey = @ForeignKey(name = "restaurant_fkey",
             foreignKeyDefinition = "FOREIGN KEY (restaurant) REFERENCES restaurants(name) ON DELETE CASCADE ON UPDATE CASCADE"))
@@ -25,8 +28,9 @@ public class Menu {
     @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @BatchSize(size = 200)
     @OrderBy("name")
-    private List<Dish> dishes;
+    private List<@Valid Dish> dishes;
 
+    @NotNull
     @Column(name = "date", nullable = false)
     private LocalDate date;
 

@@ -13,6 +13,8 @@ import ru.javawebinar.topjava.model.Menu;
 import ru.javawebinar.topjava.model.Restaurant;
 import ru.javawebinar.topjava.repository.RestaurantRepository;
 import ru.javawebinar.topjava.repository.VoteRepository;
+import ru.javawebinar.topjava.to.DishTO;
+import ru.javawebinar.topjava.to.MenuTO;
 import ru.javawebinar.topjava.to.RestaurantTO;
 import ru.javawebinar.topjava.util.TestUtils;
 import ru.javawebinar.topjava.util.exception.ErrorInfo;
@@ -89,7 +91,7 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
                 .andReturn();
 
         List<Restaurant> actual = TestUtils.readValuesFromMvcResult(result, RestaurantTO.class).stream()
-                .map(restaurantTO -> new Restaurant(restaurantTO.getName(), restaurantTO.getMenu()))
+                .map(restaurantTO -> new Restaurant(restaurantTO.getName(), restaurantTO.getDishes()))
                 .collect(Collectors.toList());
 
         Restaurant burgerQueen = new Restaurant(BurgerQueen.getName());
@@ -164,7 +166,7 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
         setTime(9, 0);
         perform(put(URL + expected.getName() + "/menu")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.writeValueToJson(expected.getMenu().getDishes())))
+                .content(JsonUtils.writeValueToJson(convert(expected.getMenu()))))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
@@ -214,8 +216,8 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
 
         List<RestaurantTO> actual = TestUtils.readValuesFromMvcResult(result, RestaurantTO.class);
         List<RestaurantTO> expected = List.of(
-                new RestaurantTO(Godzik.getName(), Godzik.getMenu().getDishes(), Godzik.getMenu().getDate(), 1),
-                new RestaurantTO(McDnlds.getName(), McDnlds.getMenu().getDishes(), McDnlds.getMenu().getDate(), 1)
+                new RestaurantTO(Godzik.getName(), convert(Godzik.getMenu()), 1),
+                new RestaurantTO(McDnlds.getName(), convert(McDnlds.getMenu()), 1)
         );
 
         assertMatch(actual, expected);
@@ -231,11 +233,11 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
 
         List<RestaurantTO> actual = TestUtils.readValuesFromMvcResult(result, RestaurantTO.class);
         List<RestaurantTO> expected = List.of(
-                new RestaurantTO(BurgerQueen.getName(), MENU_31_BurgerQueen.getDishes(), MENU_31_BurgerQueen.getDate(), 0),
-                new RestaurantTO(Godzik.getName(), MENU_21_Godzik.getDishes(), MENU_21_Godzik.getDate(), 2),
-                new RestaurantTO(Godzik.getName(), MENU_22_Godzik.getDishes(), MENU_22_Godzik.getDate(), 1),
-                new RestaurantTO(McDnlds.getName(), MENU_11_McDnlds.getDishes(), MENU_11_McDnlds.getDate(), 0),
-                new RestaurantTO(McDnlds.getName(), MENU_12_McDnlds.getDishes(), MENU_12_McDnlds.getDate(), 1)
+                new RestaurantTO(BurgerQueen.getName(), convert(MENU_31_BurgerQueen), 0),
+                new RestaurantTO(Godzik.getName(), convert(MENU_21_Godzik), 2),
+                new RestaurantTO(Godzik.getName(), convert(MENU_22_Godzik), 1),
+                new RestaurantTO(McDnlds.getName(), convert(MENU_11_McDnlds), 0),
+                new RestaurantTO(McDnlds.getName(), convert(MENU_12_McDnlds), 1)
         );
 
         assertMatch(actual, expected);
@@ -262,7 +264,7 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
         setTime(11, 0);
         assertLate(perform(put(URL + Godzik.getName() + "/menu")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.writeValueToJson(getNewMenu()))));
+                .content(JsonUtils.writeValueToJson(convert(new Menu(getNewMenu()))))));
     }
 
     @Test
@@ -313,10 +315,9 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
     @Test
     void updateMenuNotFound() throws Exception {
         setTime(9, 0);
-        List<Dish> newMenu = getNewMenu();
         ResultActions actions = perform(put(URL + NOT_FOUNT_NAME + "/menu")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.writeValueToJson(newMenu)));
+                .content(JsonUtils.writeValueToJson(convert(new Menu(getNewMenu())))));
         assertUnprocessableEntity(actions, ErrorType.DATA_NOT_FOUND);
     }
 
@@ -328,7 +329,80 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
     }
 
 
-    // TODO invalid
+    // invalid
+
+    @Test
+    void createWithDuplicateName() throws Exception {
+        setTime(9, 0);
+        ResultActions actions = perform(post(URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(convert(Godzik))));
+        assertUnprocessableEntity(actions, ErrorType.DATA_ERROR);
+
+        List<Restaurant> actual = restaurantRepository.findAll();
+        RESTAURANT_MATCHER.assertMatch(actual, BurgerQueen, Godzik, McDnlds);
+    }
+
+    @Test
+    void createInvalid() throws Exception {
+        setTime(9, 0);
+        ResultActions actions = perform(post(URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(convert(INVALID))));
+        assertUnprocessableEntity(actions, ErrorType.VALIDATION_ERROR);
+
+        List<Restaurant> actual = restaurantRepository.findAll();
+        RESTAURANT_MATCHER.assertMatch(actual, BurgerQueen, Godzik, McDnlds);
+    }
+
+    @Test
+    void createWithInvalidMenu() throws Exception {
+        setTime(9, 0);
+        Restaurant restaurant = new Restaurant("X3", List.of(new Dish("4", 1L), new Dish("Bread", 2L)));
+        ResultActions actions = perform(post(URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(convert(restaurant))));
+        assertUnprocessableEntity(actions, ErrorType.VALIDATION_ERROR);
+
+        List<Restaurant> actual = restaurantRepository.findAll();
+        RESTAURANT_MATCHER.assertMatch(actual, BurgerQueen, Godzik, McDnlds);
+    }
+
+    @Test
+    void renameWithDuplicateName() throws Exception {
+        setTime(9, 0);
+        ResultActions actions = perform(put(URL + Godzik.id())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(convert(BurgerQueen))));
+        assertUnprocessableEntity(actions, ErrorType.DATA_ERROR);
+
+        List<Restaurant> actual = restaurantRepository.findAll();
+        RESTAURANT_MATCHER.assertMatch(actual, BurgerQueen, Godzik, McDnlds);
+    }
+
+    @Test
+    void renameInvalid() throws Exception {
+        ResultActions actions = perform(put(URL + Godzik.id())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(convert(INVALID))));
+        assertUnprocessableEntity(actions, ErrorType.VALIDATION_ERROR);
+
+        List<Restaurant> actual = restaurantRepository.findAll();
+        RESTAURANT_MATCHER.assertMatch(actual, BurgerQueen, Godzik, McDnlds);
+    }
+
+    @Test
+    void updateMenuInvalid() throws Exception {
+        setTime(9, 0);
+        MenuTO menu = new MenuTO(List.of(new DishTO("", 1L), new DishTO("234", 2L)));
+        ResultActions actions = perform(put(URL + Godzik.id() + "/menu")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(menu)));
+        assertUnprocessableEntity(actions, ErrorType.VALIDATION_ERROR);
+
+        List<Restaurant> actual = restaurantRepository.findAll();
+        RESTAURANT_MATCHER.assertMatch(actual, BurgerQueen, Godzik, McDnlds);
+    }
 
 
     // TODO unauth

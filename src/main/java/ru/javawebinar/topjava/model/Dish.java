@@ -3,6 +3,7 @@ package ru.javawebinar.topjava.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
+import javax.validation.constraints.*;
 import java.util.Objects;
 
 @Entity
@@ -13,12 +14,16 @@ public class Dish implements HasId<Integer> {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dish_seq")
     private Integer id;
 
-    @Column(name = "name", nullable = false)
+    @NotBlank
+    @Size(min = 2, max = 32)
+    @Column(name = "name", nullable = false, length = 32)
     private String name;
 
+    @NotNull
     @Column(name = "price", nullable = false)
     private Long price;
 
+    @NotNull
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false,

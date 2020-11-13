@@ -4,10 +4,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.javawebinar.topjava.util.exception.ErrorInfo;
 import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.util.exception.IllegalRequestDataException;
@@ -15,6 +20,8 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
+
+import java.util.stream.Collectors;
 
 import static ru.javawebinar.topjava.util.exception.ErrorType.*;
 
@@ -34,13 +41,26 @@ public class RestControllerExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-    @ExceptionHandler(IllegalRequestDataException.class)
-    public ErrorInfo dataError(HttpServletRequest request, IllegalRequestDataException e) {
-        return logAndGetErrorInfo(request, e, false, DATA_ERROR);
+    @ExceptionHandler({IllegalRequestDataException.class,  MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class})
+    public ErrorInfo dataError(HttpServletRequest request, Exception e) {
+        return logAndGetErrorInfo(request, e, true, DATA_ERROR);
+    }
+
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ExceptionHandler({BindException.class, MethodArgumentNotValidException.class})
+    public ErrorInfo validationError(HttpServletRequest request, Exception e) {
+        BindingResult result = ((BindException) e).getBindingResult();
+
+        String msg = result.getFieldErrors().stream()
+                .map(fieldError -> String.format("[%s] %s", fieldError.getField(), fieldError.getDefaultMessage()))
+                .collect(Collectors.joining("\n"));
+
+        Throwable rootCause = logAndGetRootCause(request, e, false);
+        return new ErrorInfo(request.getRequestURL().toString(), VALIDATION_ERROR.getName(), msg, rootCause.getClass().getName());
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler({DataIntegrityViolationException.class})
+    @ExceptionHandler(DataIntegrityViolationException.class)
     public ErrorInfo conflict(HttpServletRequest request, DataIntegrityViolationException e) {
         return logAndGetErrorInfo(request, e, true, CONFLICT);
     }
@@ -51,16 +71,22 @@ public class RestControllerExceptionHandler {
         return logAndGetErrorInfo(request, e, true, APP_ERROR);
     }
 
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RestControllerExceptionHandler.class);
 
     private ErrorInfo logAndGetErrorInfo(HttpServletRequest request, Exception e, boolean logStackTrace, ErrorType type) {
+        Throwable rootCause = logAndGetRootCause(request, e, logStackTrace);
+        return new ErrorInfo(request, rootCause, type);
+    }
+
+    private Throwable logAndGetRootCause(HttpServletRequest request, Exception e, boolean logStackTrace) {
         Throwable rootCause = getRootCause(e);
         if (logStackTrace) {
             LOGGER.error(String.format("[%s]", request.getRequestURL()), rootCause);
         } else {
             LOGGER.warn("[{}] {}", request.getRequestURL(), rootCause.toString());
         }
-        return new ErrorInfo(request, rootCause, type);
+        return rootCause;
     }
 
     //  http://stackoverflow.com/a/28565320/548473

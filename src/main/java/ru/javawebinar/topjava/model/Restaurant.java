@@ -1,6 +1,8 @@
 package ru.javawebinar.topjava.model;
 
 import javax.persistence.*;
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -9,10 +11,12 @@ import java.util.Objects;
 @Table(name = "restaurants")
 public class Restaurant implements HasId<String> {
     @Id
-    @Column(name = "name", unique = true, nullable = false)
+    @Size(min = 2, max = 32)
+    @Column(name = "name", unique = true, nullable = false, length = 32)
     private String name;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @Valid
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "menu", foreignKey = @ForeignKey(name = "menu_fk"))
     private Menu menu;
 

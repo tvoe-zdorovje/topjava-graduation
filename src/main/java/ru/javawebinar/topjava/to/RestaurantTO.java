@@ -4,48 +4,57 @@ import com.fasterxml.jackson.annotation.JsonView;
 import ru.javawebinar.topjava.View;
 import ru.javawebinar.topjava.model.Dish;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.beans.ConstructorProperties;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RestaurantTO {
+import static ru.javawebinar.topjava.util.RestaurantUtils.convert;
+
+public final class RestaurantTO {
+    @NotBlank
+    @Size(min = 2, max = 32)
     @JsonView(View.Regular.class)
     private final String name;
 
-    @JsonView(View.Statistic.class)
-    private final LocalDate menuDate;
-
+    @Valid
     @JsonView(View.Regular.class)
-    private final List<Dish> menu;
+    private final MenuTO menu;
 
     @JsonView(View.Statistic.class)
     private final long numOfVotes;
 
     @ConstructorProperties({"name", "menu"})
-    public RestaurantTO(String name, List<Dish> menu) {
-        this(name, menu == null ? new ArrayList<>() : menu, null, -1L);
+    public RestaurantTO(@NotBlank @Size(min = 2, max = 32) String name, MenuTO menu) {
+        this.name = name;
+        this.menu = menu;
+        this.numOfVotes = -1;
     }
 
-    public RestaurantTO(String name, List<Dish> menu, LocalDate menuDate, long numOfVotes) {
+    public RestaurantTO(String name, MenuTO menu, long numOfVotes) {
         this.name = name;
-        this.menuDate = menuDate;
         this.menu = menu;
         this.numOfVotes = numOfVotes;
     }
+
     public String getName() {
         return name;
     }
 
-    public List<Dish> getMenu() {
+    public MenuTO getMenu() {
         return menu;
+    }
+
+    public List<Dish> getDishes() {
+        return menu == null ? new ArrayList<>() : convert(menu).getDishes();
     }
 
     @Override
     public String toString() {
         return "RestaurantTO{" +
                 "name='" + name + '\'' +
-                ", menuDate=" + menuDate +
                 ", menu=" + (menu == null ? "null" : menu) +
                 ", numOfVotes=" + numOfVotes +
                 '}';
