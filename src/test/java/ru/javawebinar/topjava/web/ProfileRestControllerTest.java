@@ -3,6 +3,7 @@ package ru.javawebinar.topjava.web;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -17,23 +18,23 @@ import ru.javawebinar.topjava.util.testData.RestaurantTestData;
 
 import java.util.List;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ru.javawebinar.topjava.model.User.Role.ADMIN;
 import static ru.javawebinar.topjava.util.TestUtils.assertUnprocessableEntity;
+import static ru.javawebinar.topjava.util.json.JsonUtils.writeValueToJsonWithAdditionalProp;
 import static ru.javawebinar.topjava.util.testData.UserTestData.*;
 
-class ProfileRestControllerTest extends AbstractControllerTest{
+class ProfileRestControllerTest extends AbstractControllerTest {
     private final String URL = "/profile";
 
     @Autowired
     UserRepository userRepository;
 
     @Test
+    @WithUserDetails(value = "2_User", userDetailsServiceBeanName = "userRepository")
     void get() throws Exception {
         MvcResult result = perform(MockMvcRequestBuilders.get(URL))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -43,30 +44,31 @@ class ProfileRestControllerTest extends AbstractControllerTest{
     }
 
     @Test
+    @WithUserDetails(value = "2_User", userDetailsServiceBeanName = "userRepository")
     void update() throws Exception {
+        User updated = getUpdated();
         perform(MockMvcRequestBuilders.put(URL)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.writeValueToJson(getUpdated())))
-                .andDo(print())
+                .content(writeValueToJsonWithAdditionalProp(updated, "password", updated.getPassword())))
                 .andExpect(status().isNoContent());
 
         User actual = userRepository.findById(USER_2_ID).orElseThrow();
-        USER_MATCHER.assertMatch(actual, getUpdated());
+        USER_MATCHER.assertMatch(actual, updated);
     }
 
     @Test
+    @WithUserDetails(value = "2_User", userDetailsServiceBeanName = "userRepository")
     void delete() throws Exception {
         perform(MockMvcRequestBuilders.delete(URL))
-                .andDo(print())
                 .andExpect(status().isNoContent());
 
         USER_MATCHER.assertMatch(userRepository.findAll(), ADMIN_1, USER_3);
     }
 
     @Test
+    @WithUserDetails(value = "2_User", userDetailsServiceBeanName = "userRepository")
     void getSelectedRestaurant() throws Exception {
         MvcResult result = perform(MockMvcRequestBuilders.get(URL + "/vote"))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -76,11 +78,14 @@ class ProfileRestControllerTest extends AbstractControllerTest{
     }
 
     // not found
+
     @Test
+    @WithUserDetails(value = "2_User", userDetailsServiceBeanName = "userRepository")
     void updateInvalid() throws Exception {
+        User user = new User(USER_2_ID, "", "", ADMIN);
         ResultActions actions = perform(MockMvcRequestBuilders.put(URL)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.writeValueToJson(new User(USER_2_ID, "", "", ADMIN))));
+                .content(writeValueToJsonWithAdditionalProp(user, "password", user.getPassword())));
         assertUnprocessableEntity(actions, ErrorType.VALIDATION_ERROR);
 
         List<User> actual = userRepository.findAll();
@@ -89,13 +94,50 @@ class ProfileRestControllerTest extends AbstractControllerTest{
     }
 
     @Test
+    @WithUserDetails(value = "2_User", userDetailsServiceBeanName = "userRepository")
     void updateWithDuplicateName() throws Exception {
+        User user = new User(USER_2_ID, USER_3.getName(), "newpass", ADMIN);
         ResultActions actions = perform(MockMvcRequestBuilders.put(URL)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.writeValueToJson(new User(USER_2_ID, USER_3.getName(), "newpass", ADMIN))));
+                .content(JsonUtils.writeValueToJson(writeValueToJsonWithAdditionalProp(user, "password", user.getPassword()))));
         assertUnprocessableEntity(actions, ErrorType.DATA_ERROR);
 
         List<User> actual = userRepository.findAll();
         USER_MATCHER.assertMatch(actual, ADMIN_1, USER_2, USER_3);
+    }
+
+    // unauthorized
+
+    @Test
+    void getUnauthorized() throws Exception {
+        perform(MockMvcRequestBuilders.get(URL))
+                .andExpect(status().isUnauthorized());
+
+    }
+
+    @Test
+    void updateUnauthorized() throws Exception {
+        User user = getUpdated();
+        perform(MockMvcRequestBuilders.put(URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtils.writeValueToJson(writeValueToJsonWithAdditionalProp(user, "password", user.getPassword()))))
+                .andExpect(status().isUnauthorized());
+
+        USER_MATCHER.assertMatch(userRepository.findAll(), ADMIN_1, USER_2, USER_3);
+    }
+
+    @Test
+    void deleteUnauthorized() throws Exception {
+        perform(MockMvcRequestBuilders.delete(URL))
+                .andExpect(status().isUnauthorized());
+
+        USER_MATCHER.assertMatch(userRepository.findAll(), ADMIN_1, USER_2, USER_3);
+    }
+
+    @Test
+    void getSelectedRestaurantUnauthorized() throws Exception {
+        perform(MockMvcRequestBuilders.get(URL + "/vote"))
+                .andExpect(status().isUnauthorized());
+        USER_MATCHER.assertMatch(userRepository.findAll(), ADMIN_1, USER_2, USER_3);
     }
 }

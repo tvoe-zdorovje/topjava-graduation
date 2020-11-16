@@ -5,7 +5,8 @@ import ru.javawebinar.topjava.model.User;
 
 import java.util.List;
 
-import static ru.javawebinar.topjava.model.User.Role.*;
+import static ru.javawebinar.topjava.model.User.Role.ADMIN;
+import static ru.javawebinar.topjava.model.User.Role.USER;
 
 public class UserTestData {
     public static final Matcher USER_MATCHER = new Matcher();
@@ -32,7 +33,7 @@ public class UserTestData {
 
     public static class Matcher {
         public void assertMatch(User actual, User expected) {
-            Assertions.assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
+            Assertions.assertThat(actual).usingRecursiveComparison().ignoringFields("password").isEqualTo(expected);
         }
 
         public void assertMatch(List<User> actual, User... expected) {
@@ -40,7 +41,7 @@ public class UserTestData {
         }
 
         public void assertMatch(List<User> actual, List<User> expected) {
-            Assertions.assertThat(actual).usingFieldByFieldElementComparator().isEqualTo(expected);
+            Assertions.assertThat(actual).usingElementComparatorIgnoringFields("password").isEqualTo(expected);
         }
     }
 }

@@ -1,5 +1,8 @@
 package ru.javawebinar.topjava.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.security.core.GrantedAuthority;
+
 import ru.javawebinar.topjava.View;
 
 import javax.persistence.*;
@@ -20,6 +23,7 @@ public class User implements HasId<Integer> {
     @Column(name = "name", nullable = false, length = 32)
     private String name;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotBlank
     @Size(min = 4, max = 16, groups = View.ValidatedUI.class)
     @Column(name = "password", nullable = false)
@@ -80,8 +84,13 @@ public class User implements HasId<Integer> {
     }
 
 
-    public enum Role {
-        USER, ADMIN
+    public enum Role implements GrantedAuthority {
+        USER, ADMIN;
+
+        @Override
+        public String getAuthority() {
+            return "ROLE_".concat(name());
+        }
     }
 
     @Override

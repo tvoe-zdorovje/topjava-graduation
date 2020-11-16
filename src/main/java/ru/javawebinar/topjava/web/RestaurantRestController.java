@@ -7,14 +7,12 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.javawebinar.topjava.View;
-import ru.javawebinar.topjava.model.Dish;
-import ru.javawebinar.topjava.model.Menu;
-import ru.javawebinar.topjava.model.Restaurant;
-import ru.javawebinar.topjava.model.Vote;
+import ru.javawebinar.topjava.model.*;
 import ru.javawebinar.topjava.repository.RestaurantRepository;
 import ru.javawebinar.topjava.repository.VoteRepository;
 import ru.javawebinar.topjava.to.MenuTO;
@@ -150,8 +148,8 @@ public class RestaurantRestController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
     @PostMapping("/{name}/vote")
-    public void vote(@PathVariable String name) throws UnavailableException {
-        LOGGER.info("user [{}] votes for restaurant [{}].", ProfileRestController.MOCK_USER.id(), name);
+    public void vote(@PathVariable String name, @AuthenticationPrincipal(expression = "user") User auth) throws UnavailableException {
+        LOGGER.info("user [{}] votes for restaurant [{}].", auth.id(), name);
 
         LocalTime now = TimeUtils.now().toLocalTime();
         if (now.isAfter(LocalTime.of(11, 0))) {
@@ -163,8 +161,8 @@ public class RestaurantRestController {
         if (menu == null) throw
                 new NotFoundException(String.format("Menu for restaurantTO '%s' could not be found", name));
 
-        voteRepository.deleteByUser(ProfileRestController.MOCK_USER.id());
-        Vote vote = new Vote(ProfileRestController.MOCK_USER, menu);
+        voteRepository.deleteByUser(auth.id());
+        Vote vote = new Vote(auth, menu);
         voteRepository.save(vote);
     }
 

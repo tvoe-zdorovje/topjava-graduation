@@ -15,9 +15,9 @@ ALTER SEQUENCE user_seq RESTART WITH 10000;
 ALTER SEQUENCE dish_seq RESTART WITH 100000;
 
 INSERT INTO users(id, name, password, role)
-VALUES (1, '1_Admin', 'admin', 'ADMIN'),
-       (2, '2_User', 'password', 'USER'),
-       (3, '3_User', '120168', 'USER');
+VALUES (1, '1_Admin', '{noop}admin', 'ADMIN'),
+       (2, '2_User', '{noop}password', 'USER'),
+       (3, '3_User', '{noop}120168', 'USER');
 
 INSERT INTO restaurants(name)
 values ('McDnlds'),

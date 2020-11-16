@@ -1,11 +1,13 @@
 package ru.javawebinar.topjava.util.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.javawebinar.topjava.util.JacksonObjectMapper;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class JsonUtils {
 
@@ -14,6 +16,17 @@ public class JsonUtils {
     public static <T> String writeValueToJson(T obj) {
         try {
             return MAPPER.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Invalid write to JSON:\n'" + obj + "'", e);
+        }
+    }
+
+    public static <T> String writeValueToJsonWithAdditionalProp(T obj, String propName, String propValue) {
+        try {
+            Map<String, Object> map = MAPPER.convertValue(obj, new TypeReference<>() {
+            });
+            map.put(propName, propValue);
+            return MAPPER.writeValueAsString(map);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Invalid write to JSON:\n'" + obj + "'", e);
         }

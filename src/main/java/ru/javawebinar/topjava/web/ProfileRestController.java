@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import ru.javawebinar.topjava.model.User;
@@ -21,8 +22,6 @@ import javax.validation.Valid;
 public class ProfileRestController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileRestController.class);
 
-    public static final User MOCK_USER = new User(2, "MOCK", "Pass", User.Role.USER);
-
     private final UserRestController userRestController;
 
     public ProfileRestController(UserRestController userRestController, VoteRepository voteRepository) {
@@ -31,35 +30,35 @@ public class ProfileRestController {
     }
 
     @GetMapping
-    public User get() {
-        LOGGER.info("get user [{}]", MOCK_USER.getId());
-        return userRestController.get(MOCK_USER.id());
+    public User get(@AuthenticationPrincipal(expression = "user") User auth) {
+        LOGGER.info("get user [{}]", auth.getId());
+        return userRestController.get(auth.id());
     }
 
     @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void update(@Valid @RequestBody User user) {
-        LOGGER.info("update user [{}]: {}", MOCK_USER.getId(), user);
-        user.setId(MOCK_USER.getId());
-        userRestController.update(user, MOCK_USER.id());
+    public void update(@Valid @RequestBody User user, @AuthenticationPrincipal(expression = "user") User auth) {
+        LOGGER.info("update user [{}]: {}", auth.getId(), user);
+        user.setId(auth.getId());
+        userRestController.update(user, auth.id());
     }
 
     @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping
-    public void delete() {
-        LOGGER.info("delete user [{}]", MOCK_USER.getId());
-        userRestController.delete(MOCK_USER.id());
+    public void delete(@AuthenticationPrincipal(expression = "user") User auth) {
+        LOGGER.info("delete user [{}]", auth.getId());
+        userRestController.delete(auth.id());
     }
 
     private final VoteRepository voteRepository;
 
     @GetMapping("/vote")
-    public ResponseEntity<RestaurantTO> getSelectedRestaurant() {
-        LOGGER.info("get a user-selected restaurant [{}].", MOCK_USER.getId());
+    public ResponseEntity<RestaurantTO> getSelectedRestaurant(@AuthenticationPrincipal(expression = "user") User auth) {
+        LOGGER.info("get a user-selected restaurant [{}].", auth.getId());
 
-        Vote vote = voteRepository.findByUser(MOCK_USER.id());
+        Vote vote = voteRepository.findByUser(auth.id());
 
         if (vote == null || vote.getMenu() == null)
             return ResponseEntity.noContent().build();

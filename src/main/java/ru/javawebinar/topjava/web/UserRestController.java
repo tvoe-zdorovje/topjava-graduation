@@ -6,7 +6,9 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -28,8 +30,9 @@ public class UserRestController {
 
     private final UserRepository repository;
 
-    public UserRestController(UserRepository repository) {
+    public UserRestController(UserRepository repository, PasswordEncoder encoder) {
         this.repository = repository;
+        this.encoder = encoder;
     }
 
     @Transactional
@@ -37,13 +40,12 @@ public class UserRestController {
     public ResponseEntity<User> register(@Validated(View.ValidatedUI.class) @RequestBody User user) {
         LOGGER.info("register user: {}.", user);
 
-        validateName(user);
-
         if (!user.isNew()) {
             throw new IllegalRequestDataException("User must be new (id=null)");
         }
 
-        User created = repository.save(user);
+        user.setRole(User.Role.USER);
+        User created = prepareAndSave(user);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/{id}")
                 .buildAndExpand(created.id()).toUri();
@@ -76,8 +78,6 @@ public class UserRestController {
     public void update(@Validated(View.ValidatedUI.class) @RequestBody User user, @PathVariable int id) {
         LOGGER.info("update user [{}]: {}.", id, user);
 
-        validateName(user);
-
         if (user.isNew()) {
             user.setId(id);
         } else {
@@ -85,14 +85,22 @@ public class UserRestController {
                 throw new IllegalRequestDataException("User must be with id=" + id);
         }
 
-        repository.save(user);
+        prepareAndSave(user);
     }
 
-    private void validateName(User newUser) {
+    private final PasswordEncoder encoder;
+
+    private User prepareAndSave(User newUser) {
         String name = newUser.getName();
         User user = repository.findByName(name).orElse(newUser);
         if (!user.equals(newUser))
             throw new IllegalRequestDataException(String.format("User with name '%s' already exist!", name));
+
+        String rawPassword = newUser.getPassword();
+        String encodedPassword = StringUtils.hasText(rawPassword) ? encoder.encode(rawPassword) : rawPassword;
+        newUser.setPassword(encodedPassword);
+
+        return repository.save(newUser);
     }
 
     @Transactional

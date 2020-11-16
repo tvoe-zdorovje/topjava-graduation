@@ -20,7 +20,7 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
-
+import javax.validation.ConstraintViolationException;
 import java.util.stream.Collectors;
 
 import static ru.javawebinar.topjava.util.exception.ErrorType.*;
@@ -47,7 +47,7 @@ public class RestControllerExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-    @ExceptionHandler({BindException.class, MethodArgumentNotValidException.class})
+    @ExceptionHandler({BindException.class, MethodArgumentNotValidException.class, ConstraintViolationException.class})
     public ErrorInfo validationError(HttpServletRequest request, Exception e) {
         BindingResult result = ((BindException) e).getBindingResult();
 

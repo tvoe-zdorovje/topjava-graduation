@@ -2,8 +2,11 @@ package ru.javawebinar.topjava.util;
 
 import org.assertj.core.api.Assertions;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.util.exception.ErrorInfo;
 import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.util.exception.TimeUtils;
@@ -39,6 +42,10 @@ public class TestUtils {
 
         ErrorInfo errorInfo = TestUtils.readValueFromMvcResult(result, ErrorInfo.class);
         Assertions.assertThat(errorInfo.getType()).isEqualTo(errorType.getName());
+    }
+
+    public static RequestPostProcessor httpBasic(User user) {
+        return SecurityMockMvcRequestPostProcessors.httpBasic(user.getName(), user.getPassword());
     }
 
     private static Field clockField;
