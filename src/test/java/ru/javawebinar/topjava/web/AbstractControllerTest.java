@@ -15,7 +15,7 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import javax.annotation.PostConstruct;
 
 @SpringJUnitWebConfig(locations = {
-        "classpath:spring/spring-security.xml",
+        "classpath:spring/spring-context.xml",
         "classpath:spring/spring-db.xml",
         "classpath:spring/spring-mvc.xml"
 })

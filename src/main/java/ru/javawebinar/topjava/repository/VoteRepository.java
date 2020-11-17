@@ -1,17 +1,16 @@
 package ru.javawebinar.topjava.repository;
 
-import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.model.Menu;
-import ru.javawebinar.topjava.model.Restaurant;
 import ru.javawebinar.topjava.model.Vote;
 
-import javax.persistence.Persistence;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public interface VoteRepository extends JpaRepository<Vote, Integer> {

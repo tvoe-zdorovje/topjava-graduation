@@ -28,6 +28,8 @@
         <spring.datajpa.version>2.4.0</spring.datajpa.version>
         <spring.version>5.3.0</spring.version>
         <spring.security.version>5.4.1</spring.security.version>
+        <!-- Cache -->
+        <ehcache.version>3.9.0</ehcache.version>
         <!-- Test -->
         <junit.version>5.7.0</junit.version>
         <mockito.version>3.6.0</mockito.version>
@@ -102,6 +104,11 @@
         </dependency>
         <!-- Spring -->
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
             <version>${spring.datajpa.version}</version>
@@ -127,7 +134,24 @@
             <artifactId>spring-security-config</artifactId>
             <version>${spring.security.version}</version>
         </dependency>
-
+        <!-- Cache -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jcache</artifactId>
+            <version>${hibernate.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+            <scope>runtime</scope>
+            <version>${ehcache.version}</version>
+        </dependency>
+        <!--https://medium.com/criciumadev/its-time-migrating-to-java-11-5eb3868354f9-->
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>2.3.1</version>
+        </dependency>
         <!-- Test -->
         <dependency>
             <groupId>org.springframework</groupId>
