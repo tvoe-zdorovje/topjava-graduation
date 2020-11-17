@@ -4,7 +4,7 @@ import org.springframework.security.core.userdetails.User;
 
 import java.util.Set;
 
-public class AuthUser extends User {
+public final class AuthUser extends User {
     private final ru.javawebinar.topjava.model.User user;
 
     public AuthUser(ru.javawebinar.topjava.model.User user) {

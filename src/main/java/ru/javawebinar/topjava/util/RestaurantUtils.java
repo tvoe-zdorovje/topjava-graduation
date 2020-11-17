@@ -14,7 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class RestaurantUtils {
+public final class RestaurantUtils {
+
+    private RestaurantUtils() {
+    }
 
     public static Restaurant convert(RestaurantTO restaurantTO) {
         return new Restaurant(restaurantTO.getName(), restaurantTO.getDishes() == null ? new ArrayList<>() : restaurantTO.getDishes());

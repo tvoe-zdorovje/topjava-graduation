@@ -1,4 +1,4 @@
-package ru.javawebinar.topjava.util.testData;
+package ru.javawebinar.topjava.util;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-public class RestaurantTestData {
+public class RestaurantTestUtils {
     public static final Matcher RESTAURANT_MATCHER = new Matcher();
 
     public static final Menu MENU_11_McDnlds = new Menu(null,

@@ -126,12 +126,10 @@ public class RestaurantRestController {
     }
 
     @JsonView(View.Statistic.class)
-    @GetMapping("/statistic")
-    public List<RestaurantTO> getStatistic(@RequestParam(value = "from", required = false)
+    @GetMapping("/statistics")
+    public List<RestaurantTO> getStatistics(@RequestParam(value = "from", required = false)
                                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         LOGGER.info("get statistic of votes from {}", date == null ? "current date" : date);
-
-        if (date == null) date = TimeUtils.now().toLocalDate();
-        return service.getStatistic(date);
+        return service.getStatistic(date == null ? TimeUtils.now().toLocalDate() : date);
     }
 }

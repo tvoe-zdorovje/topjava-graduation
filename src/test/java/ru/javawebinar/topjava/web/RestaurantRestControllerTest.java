@@ -16,11 +16,9 @@ import ru.javawebinar.topjava.repository.VoteRepository;
 import ru.javawebinar.topjava.to.DishTO;
 import ru.javawebinar.topjava.to.MenuTO;
 import ru.javawebinar.topjava.to.RestaurantTO;
-import ru.javawebinar.topjava.util.TestUtils;
 import ru.javawebinar.topjava.util.exception.ErrorInfo;
 import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.util.json.JsonUtils;
-import ru.javawebinar.topjava.util.testData.UserTestData;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,11 +27,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.javawebinar.topjava.util.RestaurantTestUtils.*;
 import static ru.javawebinar.topjava.util.RestaurantUtils.convert;
 import static ru.javawebinar.topjava.util.TestUtils.*;
-import static ru.javawebinar.topjava.util.testData.RestaurantTestData.*;
-import static ru.javawebinar.topjava.util.testData.UserTestData.ADMIN_1;
-import static ru.javawebinar.topjava.util.testData.UserTestData.USER_2;
+import static ru.javawebinar.topjava.util.UserTestUtils.*;
 
 class RestaurantRestControllerTest extends AbstractControllerTest {
     private static final String URL = "/restaurants/";
@@ -73,7 +70,7 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
     }
 
     private void assertMatch(MvcResult result, Restaurant expected) throws java.io.UnsupportedEncodingException {
-        RestaurantTO created = TestUtils.readValueFromMvcResult(result, RestaurantTO.class);
+        RestaurantTO created = readValueFromMvcResult(result, RestaurantTO.class);
         Restaurant actual = restaurantRepository.findById(created.getName()).orElseThrow();
 
         RESTAURANT_MATCHER.assertMatch(actual, convert(created));
@@ -87,7 +84,7 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        List<Restaurant> actual = TestUtils.readValuesFromMvcResult(result, RestaurantTO.class).stream()
+        List<Restaurant> actual = readValuesFromMvcResult(result, RestaurantTO.class).stream()
                 .map(restaurantTO -> new Restaurant(restaurantTO.getName(), restaurantTO.getDishes()))
                 .collect(Collectors.toList());
 
@@ -129,7 +126,7 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        RestaurantTO actual = TestUtils.readValueFromMvcResult(result, RestaurantTO.class);
+        RestaurantTO actual = readValueFromMvcResult(result, RestaurantTO.class);
         RESTAURANT_MATCHER.assertMatch(convert(actual), Godzik);
     }
 
@@ -168,13 +165,13 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
     }
 
     @Autowired
-    VoteRepository voteRepository;
+    private VoteRepository voteRepository;
 
     @Test
     void vote() throws Exception {
         Assertions.assertThat(voteRepository.getCount(Godzik.id())).isEqualTo(1);
         Assertions.assertThat(voteRepository.getCount(McDnlds.id())).isEqualTo(1);
-        Restaurant initChoice = voteRepository.findByUser(UserTestData.USER_2_ID).getMenu().getRestaurant();
+        Restaurant initChoice = voteRepository.findByUser(USER_2_ID).getMenu().getRestaurant();
         RESTAURANT_MATCHER.assertMatch(initChoice, Godzik);
 
         setTime(10, 0);
@@ -184,7 +181,7 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
 
         Assertions.assertThat(voteRepository.getCount(Godzik.id())).isEqualTo(0);
         Assertions.assertThat(voteRepository.getCount(McDnlds.id())).isEqualTo(2);
-        Restaurant currentChoice = voteRepository.findByUser(UserTestData.USER_2_ID).getMenu().getRestaurant();
+        Restaurant currentChoice = voteRepository.findByUser(USER_2_ID).getMenu().getRestaurant();
         RESTAURANT_MATCHER.assertMatch(currentChoice, McDnlds);
     }
 
@@ -199,13 +196,13 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void getTodaysStatistic() throws Exception {
-        MvcResult result = perform(MockMvcRequestBuilders.get(URL + "statistic").with(httpBasic(USER_2)))
+    void getTodaysStatistics() throws Exception {
+        MvcResult result = perform(MockMvcRequestBuilders.get(URL + "statistics").with(httpBasic(USER_2)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        List<RestaurantTO> actual = TestUtils.readValuesFromMvcResult(result, RestaurantTO.class);
+        List<RestaurantTO> actual = readValuesFromMvcResult(result, RestaurantTO.class);
         List<RestaurantTO> expected = List.of(
                 new RestaurantTO(Godzik.getName(), convert(Godzik.getMenu()), 1),
                 new RestaurantTO(McDnlds.getName(), convert(McDnlds.getMenu()), 1)
@@ -215,13 +212,13 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void getStatisticFrom() throws Exception {
-        MvcResult result = perform(MockMvcRequestBuilders.get(URL + "statistic" + "?from=2020-01-01").with(httpBasic(ADMIN_1)))
+    void getStatisticsFrom() throws Exception {
+        MvcResult result = perform(MockMvcRequestBuilders.get(URL + "statistics" + "?from=2020-01-01").with(httpBasic(ADMIN_1)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        List<RestaurantTO> actual = TestUtils.readValuesFromMvcResult(result, RestaurantTO.class);
+        List<RestaurantTO> actual = readValuesFromMvcResult(result, RestaurantTO.class);
         List<RestaurantTO> expected = List.of(
                 new RestaurantTO(BurgerQueen.getName(), convert(MENU_31_BurgerQueen), 0),
                 new RestaurantTO(Godzik.getName(), convert(MENU_21_Godzik), 2),
@@ -275,7 +272,7 @@ class RestaurantRestControllerTest extends AbstractControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        ErrorInfo errorInfo = TestUtils.readValueFromMvcResult(result, ErrorInfo.class);
+        ErrorInfo errorInfo = readValueFromMvcResult(result, ErrorInfo.class);
         Assertions.assertThat(errorInfo.getType()).isEqualTo(ErrorType.TEMPORARILY_UNAVAILABLE.getName());
     }
 

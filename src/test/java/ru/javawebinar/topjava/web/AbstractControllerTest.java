@@ -6,7 +6,6 @@ import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
@@ -32,12 +31,11 @@ public abstract class AbstractControllerTest {
     @PostConstruct
     private void postConstruct() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-                .alwaysDo(MockMvcResultHandlers.print())
                 .apply(SecurityMockMvcConfigurers.springSecurity())
                 .addFilter(CHARACTER_ENCODING_FILTER).build();
     }
 
-    ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
+    protected ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
         return mockMvc.perform(builder);
     }
 }

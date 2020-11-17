@@ -1,4 +1,4 @@
-package ru.javawebinar.topjava.util.testData;
+package ru.javawebinar.topjava.util;
 
 import org.assertj.core.api.Assertions;
 import ru.javawebinar.topjava.model.User;
@@ -8,11 +8,11 @@ import java.util.List;
 import static ru.javawebinar.topjava.model.User.Role.ADMIN;
 import static ru.javawebinar.topjava.model.User.Role.USER;
 
-public class UserTestData {
+public class UserTestUtils {
     public static final Matcher USER_MATCHER = new Matcher();
 
     public static final int ADMIN_1_ID = 1;
-    public static final User ADMIN_1 = new User(ADMIN_1_ID, "1_Admin", "admin", User.Role.ADMIN);
+    public static final User ADMIN_1 = new User(ADMIN_1_ID, "1_Admin", "admin", ADMIN);
 
     public static final int USER_2_ID = 2;
     public static final User USER_2 = new User(USER_2_ID, "2_User", "password", USER);

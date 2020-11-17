@@ -11,12 +11,12 @@ public class Vote implements HasId<Integer>{
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "user_fk",
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "vote_user_fk",
             foreignKeyDefinition = "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"))
     private User user;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "menu_id", nullable = false, foreignKey = @ForeignKey(name = "menu_fk",
+    @JoinColumn(name = "menu_id", nullable = false, foreignKey = @ForeignKey(name = "vote_menu_fk",
             foreignKeyDefinition = "FOREIGN KEY (menu_id) REFERENCES menu(id) ON DELETE CASCADE ON UPDATE CASCADE"))
     private Menu menu;
 

@@ -24,7 +24,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class TestUtils {
+public final class TestUtils {
+
+    private TestUtils() {
+    }
 
     public static <T> T readValueFromMvcResult(MvcResult mvcResult, Class<T> clazz) throws UnsupportedEncodingException {
         return JsonUtils.readValueFromJson(mvcResult.getResponse().getContentAsString(), clazz);

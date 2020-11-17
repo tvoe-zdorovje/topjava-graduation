@@ -21,7 +21,7 @@ public class Restaurant implements HasId<String> {
 
     @Valid
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu", foreignKey = @ForeignKey(name = "menu_fk"))
+    @JoinColumn(name = "menu", foreignKey = @ForeignKey(name = "restaurant_menu_fk"))
     private Menu menu;
 
     public Restaurant() {
@@ -38,7 +38,9 @@ public class Restaurant implements HasId<String> {
 
     public Restaurant(String name, Menu menu) {
         this.name = name;
-        setMenu(menu);
+        this.menu = menu;
+        if (menu != null)
+            this.menu.setRestaurant(this);
     }
 
     public void setName(String name) {

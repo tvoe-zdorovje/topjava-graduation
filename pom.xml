@@ -10,7 +10,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <name>Topjava Graduation</name>
-    <url>https://github.com/tvoe-zdorovje/topjava-1/blob/doc/doc/graduation.md/</url>
+    <url>https://topjava.ru/topjava</url>
 
     <properties>
         <java.version>14</java.version>

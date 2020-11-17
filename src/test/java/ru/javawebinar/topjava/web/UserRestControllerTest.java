@@ -19,13 +19,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static ru.javawebinar.topjava.model.User.Role.ADMIN;
 import static ru.javawebinar.topjava.util.TestUtils.*;
 import static ru.javawebinar.topjava.util.json.JsonUtils.writeValueToJsonWithAdditionalProp;
-import static ru.javawebinar.topjava.util.testData.UserTestData.*;
+import static ru.javawebinar.topjava.util.UserTestUtils.*;
 
 class UserRestControllerTest extends AbstractControllerTest {
     private final String URL = "/users/";
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Test
     void register() throws Exception {

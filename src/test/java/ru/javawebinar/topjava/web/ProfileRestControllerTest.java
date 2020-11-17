@@ -14,22 +14,23 @@ import ru.javawebinar.topjava.util.RestaurantUtils;
 import ru.javawebinar.topjava.util.TestUtils;
 import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.util.json.JsonUtils;
-import ru.javawebinar.topjava.util.testData.RestaurantTestData;
+import ru.javawebinar.topjava.util.RestaurantTestUtils;
 
 import java.util.List;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ru.javawebinar.topjava.model.User.Role.ADMIN;
+import static ru.javawebinar.topjava.model.User.Role.USER;
 import static ru.javawebinar.topjava.util.TestUtils.assertUnprocessableEntity;
 import static ru.javawebinar.topjava.util.json.JsonUtils.writeValueToJsonWithAdditionalProp;
-import static ru.javawebinar.topjava.util.testData.UserTestData.*;
+import static ru.javawebinar.topjava.util.UserTestUtils.*;
 
 class ProfileRestControllerTest extends AbstractControllerTest {
     private final String URL = "/profile";
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Test
     @WithUserDetails(value = "2_User", userDetailsServiceBeanName = "userRepository")
@@ -53,6 +54,7 @@ class ProfileRestControllerTest extends AbstractControllerTest {
                 .andExpect(status().isNoContent());
 
         User actual = userRepository.findById(USER_2_ID).orElseThrow();
+        updated.setRole(USER);
         USER_MATCHER.assertMatch(actual, updated);
     }
 
@@ -74,7 +76,7 @@ class ProfileRestControllerTest extends AbstractControllerTest {
                 .andReturn();
 
         RestaurantTO restaurantTO = TestUtils.readValueFromMvcResult(result, RestaurantTO.class);
-        RestaurantTestData.RESTAURANT_MATCHER.assertMatch(RestaurantUtils.convert(restaurantTO), RestaurantTestData.Godzik);
+        RestaurantTestUtils.RESTAURANT_MATCHER.assertMatch(RestaurantUtils.convert(restaurantTO), RestaurantTestUtils.Godzik);
     }
 
     // not found
@@ -99,7 +101,7 @@ class ProfileRestControllerTest extends AbstractControllerTest {
         User user = new User(USER_2_ID, USER_3.getName(), "newpass", ADMIN);
         ResultActions actions = perform(MockMvcRequestBuilders.put(URL)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.writeValueToJson(writeValueToJsonWithAdditionalProp(user, "password", user.getPassword()))));
+                .content(writeValueToJsonWithAdditionalProp(user, "password", user.getPassword())));
         assertUnprocessableEntity(actions, ErrorType.DATA_ERROR);
 
         List<User> actual = userRepository.findAll();

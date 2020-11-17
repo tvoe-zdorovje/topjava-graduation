@@ -41,6 +41,7 @@ public class ProfileRestController {
     public void update(@Valid @RequestBody User user, @AuthenticationPrincipal(expression = "user") User auth) {
         LOGGER.info("update user [{}]: {}", auth.getId(), user);
         user.setId(auth.getId());
+        user.setRole(auth.getRole());
         userRestController.update(user, auth.id());
     }
 

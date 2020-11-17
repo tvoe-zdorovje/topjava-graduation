@@ -10,7 +10,7 @@ import ru.javawebinar.topjava.View;
 
 public class JacksonObjectMapper extends ObjectMapper {
 
-    public static ObjectMapper MAPPER = new JacksonObjectMapper();
+    private static final ObjectMapper MAPPER = new JacksonObjectMapper();
 
     private JacksonObjectMapper() {
         registerModule(new JavaTimeModule());

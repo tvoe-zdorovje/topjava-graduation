@@ -58,7 +58,7 @@ public class RestaurantService {
     }
 
     @PersistenceContext
-    EntityManager entityManager;
+    private EntityManager entityManager;
 
     @CacheEvict(value = "restaurants", allEntries = true)
     public void updateMenu(String name, MenuTO menuTO) {

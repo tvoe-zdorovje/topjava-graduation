@@ -69,7 +69,10 @@ public class Menu {
     }
 
     public void setDishes(List<Dish> dishes) {
-        dishes.forEach(dish -> dish.setMenu(this));
+        dishes.forEach(dish -> {
+            if (dish != null)
+                dish.setMenu(this);
+        });
         this.dishes = dishes;
     }
 
@@ -87,7 +90,7 @@ public class Menu {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Menu menu = (Menu) o;
-        if (id==null || menu.id==null) return false;
+        if (id == null || menu.id == null) return false;
         return id.equals(menu.id);
     }
 
